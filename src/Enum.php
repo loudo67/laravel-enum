@@ -344,7 +344,7 @@ abstract class Enum implements EnumContract, Castable, Arrayable, JsonSerializab
             $localizedStringKey = static::getLocalizationKey() . '.' . $value;
 
             if (Lang::has($localizedStringKey)) {
-                return __($localizedStringKey);
+                return trans($localizedStringKey);
             }
         }
 

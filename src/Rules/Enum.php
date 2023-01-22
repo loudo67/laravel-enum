@@ -39,8 +39,8 @@ class Enum implements Rule
     public function message(): string|array
     {
         return trans()->has('validation.enum')
-            ? __('validation.enum')
-            : __('laravelEnum::messages.enum');
+            ? trans('validation.enum')
+            : trans('laravelEnum::messages.enum');
     }
 
     /**
