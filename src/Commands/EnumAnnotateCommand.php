@@ -145,18 +145,12 @@ class EnumAnnotateCommand extends Command
 
         $originalDocBlock = null;
 
-        if ($reflectionClass->getDocComment()) {
-            $originalDocBlock = DocBlockGenerator::fromReflection(
-                new DocBlockReflection(ltrim($reflectionClass->getDocComment()))
-            );
+        $docComment = $reflectionClass->getDocComment();
+        if ($docComment) {
+            $docBlockReflection = new DocBlockReflection(ltrim($docComment));
+            $originalDocBlock = DocBlockGenerator::fromReflection($docBlockReflection);
 
-            if ($originalDocBlock->getShortDescription()) {
-                $docBlock->setShortDescription($originalDocBlock->getShortDescription());
-            }
-
-            if ($originalDocBlock->getLongDescription()) {
-                $docBlock->setLongDescription($originalDocBlock->getLongDescription());
-            }
+            $docBlock->setLongDescription($this->getDocblockWithoutTags($docBlockReflection));
         }
 
         $docBlock->setTags($this->getDocblockTags(
@@ -165,6 +159,15 @@ class EnumAnnotateCommand extends Command
         ));
 
         return $docBlock;
+    }
+
+    protected function getDocblockWithoutTags(DocBlockReflection $docBlockReflection): string
+    {
+        $docBlockContents = $docBlockReflection->getContents();
+        // We can remove all tags here, as we add them back in with getDocblockTags
+        $withoutTags = preg_replace('/@.*$/m', '', $docBlockContents);
+
+        return trim($withoutTags);
     }
 
     /**
