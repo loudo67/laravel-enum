@@ -3,17 +3,15 @@
 namespace BenSampo\Enum\Commands;
 
 use BenSampo\Enum\Enum;
-use Laminas\Code\Generator\DocBlock\Tag\MethodTag;
-use Laminas\Code\Generator\DocBlock\Tag\TagInterface;
-use ReflectionClass;
-use InvalidArgumentException;
+use Composer\ClassMapGenerator\ClassMapGenerator;
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
-use Composer\ClassMapGenerator\ClassMapGenerator;
+use Laminas\Code\Generator\DocBlock\Tag\MethodTag;
+use Laminas\Code\Generator\DocBlock\Tag\TagInterface;
 use Laminas\Code\Generator\DocBlockGenerator;
 use Laminas\Code\Reflection\DocBlockReflection;
-use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputOption;
 
 class EnumAnnotateCommand extends Command
 {
@@ -23,9 +21,7 @@ class EnumAnnotateCommand extends Command
 
     protected Filesystem $filesystem;
 
-    /**
-     * @return array<int, array<int, mixed>>
-     */
+    /** @return array<int, array<int, mixed>> */
     protected function getArguments(): array
     {
         return [
@@ -33,9 +29,7 @@ class EnumAnnotateCommand extends Command
         ];
     }
 
-    /**
-     * @return array<int, array<int, mixed>>
-     */
+    /** @return array<int, array<int, mixed>> */
     protected function getOptions(): array
     {
         return [
@@ -59,10 +53,21 @@ class EnumAnnotateCommand extends Command
         return 0;
     }
 
+    protected function annotateClass(string $className): void
+    {
+        if (! is_subclass_of($className, Enum::class)) {
+            $parentClass = Enum::class;
+            throw new \InvalidArgumentException("The given class {$className} must be an instance of {$parentClass}.");
+        }
+
+        $reflection = new \ReflectionClass($className);
+        $this->annotate($reflection);
+    }
+
     protected function annotateFolder(): void
     {
         foreach (ClassMapGenerator::createMap($this->searchDirectory()) as $class => $_) {
-            $reflection = new ReflectionClass($class);
+            $reflection = new \ReflectionClass($class);
 
             if ($reflection->isSubclassOf(Enum::class)) {
                 $this->annotate($reflection);
@@ -70,39 +75,10 @@ class EnumAnnotateCommand extends Command
         }
     }
 
-    protected function annotateClass(string $className): void
+    /** @param  \ReflectionClass<\BenSampo\Enum\Enum<mixed>> $reflectionClass */
+    protected function annotate(\ReflectionClass $reflectionClass): void
     {
-        if (!is_subclass_of($className, Enum::class)) {
-            $parentClass = Enum::class;
-            throw new InvalidArgumentException("The given class {$className} must be an instance of {$parentClass}.");
-        }
-
-        $reflection = new ReflectionClass($className);
-        $this->annotate($reflection);
-    }
-
-    /**
-     * @param  \ReflectionClass<\BenSampo\Enum\Enum<mixed>> $reflectionClass
-     */
-    protected function annotate(ReflectionClass $reflectionClass): void
-    {
-        $docBlock = DocBlockGenerator::fromArray([]);
-
-        if ($reflectionClass->getDocComment()) {
-            $docBlock->setShortDescription(
-                DocBlockGenerator::fromReflection(new DocBlockReflection($reflectionClass))
-                    ->getShortDescription()
-            );
-        }
-
-        $this->updateClassDocblock($reflectionClass, $this->getDocBlock($reflectionClass));
-    }
-
-    /**
-     * @param  \ReflectionClass<\BenSampo\Enum\Enum<mixed>> $reflectionClass
-     */
-    protected function updateClassDocblock(ReflectionClass $reflectionClass, DocBlockGenerator $docBlock): void
-    {
+        $docBlock = $this->getDocBlock($reflectionClass);
         $shortName = $reflectionClass->getShortName();
         $fileName = $reflectionClass->getFileName();
         $contents = $this->filesystem->get($fileName);
@@ -120,7 +96,7 @@ class EnumAnnotateCommand extends Command
         $contents = preg_replace(
             "#\\r?\\n?\/\*[\s\S]*?\*\/(\\r?\\n)?{$quotedClassDeclaration}#ms",
             "\$1{$classDeclaration}",
-            $contents
+            $contents,
         );
 
         // Make sure we don't replace too much
@@ -128,17 +104,15 @@ class EnumAnnotateCommand extends Command
             $contents,
             "{$docBlock->generate()}{$classDeclaration}",
             strpos($contents, $classDeclaration),
-            strlen($classDeclaration)
+            strlen($classDeclaration),
         );
 
         $this->filesystem->put($fileName, $contents);
         $this->info("Wrote new phpDocBlock to {$fileName}.");
     }
 
-    /**
-     * @param  \ReflectionClass<\BenSampo\Enum\Enum<mixed>> $reflectionClass
-     */
-    protected function getDocBlock(ReflectionClass $reflectionClass): DocBlockGenerator
+    /** @param  \ReflectionClass<\BenSampo\Enum\Enum<mixed>> $reflectionClass */
+    protected function getDocBlock(\ReflectionClass $reflectionClass): DocBlockGenerator
     {
         $docBlock = DocBlockGenerator::fromArray([])
             ->setWordWrap(false);
@@ -172,9 +146,10 @@ class EnumAnnotateCommand extends Command
 
     /**
      * @param  \ReflectionClass<\BenSampo\Enum\Enum<mixed>> $reflectionClass
+     *
      * @return array<\Laminas\Code\Generator\DocBlock\Tag\TagInterface>
      */
-    protected function getDocblockTags(DocBlockGenerator|null $originalDocblock, ReflectionClass $reflectionClass): array
+    protected function getDocblockTags(DocBlockGenerator|null $originalDocblock, \ReflectionClass $reflectionClass): array
     {
         $constants = $reflectionClass->getConstants();
         $constantKeys = array_keys($constants);
@@ -188,8 +163,7 @@ class EnumAnnotateCommand extends Command
         if ($originalDocblock) {
             $tags = array_merge(
                 $tags,
-                array_filter($originalDocblock->getTags(), fn (TagInterface $tag): bool =>
-                    ! $tag instanceof MethodTag
+                array_filter($originalDocblock->getTags(), fn (TagInterface $tag): bool => ! $tag instanceof MethodTag
                     || ! in_array($tag->getMethodName(), $constantKeys, true))
             );
         }

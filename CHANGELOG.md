@@ -7,6 +7,62 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## 6.6.4
+
+### Fixed
+
+- Fix conversion of `Enum::fromKey()` to native enum
+
+## 6.6.3
+
+### Fixed
+
+- Remove leading backslash in class names passed to `php artisan enum:to-native`
+
+## 6.6.2
+
+### Fixed
+
+- Convert single classes in one step with `php artisan enum:to-native`
+
+## 6.6.1
+
+### Fixed
+
+- Disable timeout of rector calls in `php artisan enum:to-native`
+
+## 6.6.0
+
+### Changed
+
+- Use command `enum:to-native` for simplified one-step conversion of classes that extend `BenSampo\Enum\Enum` to native PHP enums
+
+## 6.5.0
+
+### Added
+
+- Add Rector rules for conversion of classes that extend `BenSampo\Enum\Enum` to native PHP enums
+
+### Deprecated
+
+- Deprecate command `enum:to-native` in favor of Rector conversion
+
+## 6.4.1
+
+### Fixed
+
+- Ensure validation rules are always added https://github.com/BenSampo/laravel-enum/pull/327
+
+## 6.4.0
+
+### Added
+
+- Add command `enum:to-native` to convert a class that extends `BenSampo\Enum\Enum` to a native PHP enum
+
+### Fixed
+
+- Load pipe-string syntax validation translations lazily https://github.com/BenSampo/laravel-enum/pull/324
+
 ## 6.3.3
 
 ### Fixed

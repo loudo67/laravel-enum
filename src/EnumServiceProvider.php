@@ -2,20 +2,18 @@
 
 namespace BenSampo\Enum;
 
-use Doctrine\DBAL\Types\Type;
+use BenSampo\Enum\Commands\EnumAnnotateCommand;
+use BenSampo\Enum\Commands\EnumToNativeCommand;
+use BenSampo\Enum\Commands\MakeEnumCommand;
 use BenSampo\Enum\Rules\Enum;
 use BenSampo\Enum\Rules\EnumKey;
 use BenSampo\Enum\Rules\EnumValue;
+use Doctrine\DBAL\Types\Type;
 use Illuminate\Contracts\Validation\Factory as ValidationFactory;
 use Illuminate\Support\ServiceProvider;
-use BenSampo\Enum\Commands\MakeEnumCommand;
-use BenSampo\Enum\Commands\EnumAnnotateCommand;
 
 class EnumServiceProvider extends ServiceProvider
 {
-    /**
-     * Perform post-registration booting of services.
-     */
     public function boot(): void
     {
         $this->bootCommands();
@@ -27,12 +25,13 @@ class EnumServiceProvider extends ServiceProvider
     protected function bootCommands(): void
     {
         $this->publishes([
-            __DIR__.'/Commands/stubs' => $this->app->basePath('stubs')
+            __DIR__ . '/Commands/stubs' => $this->app->basePath('stubs'),
         ], 'stubs');
 
         if ($this->app->runningInConsole()) {
             $this->commands([
                 EnumAnnotateCommand::class,
+                EnumToNativeCommand::class,
                 MakeEnumCommand::class,
             ]);
         }
@@ -40,34 +39,33 @@ class EnumServiceProvider extends ServiceProvider
 
     protected function bootValidators(): void
     {
-        $validationFactory = $this->app->make(ValidationFactory::class);
-        assert($validationFactory instanceof ValidationFactory);
+        $this->app->extend(ValidationFactory::class, function (ValidationFactory $validationFactory): ValidationFactory {
+            $validationFactory->extend('enum_key', function (string $attribute, $value, array $parameters, $validator): bool {
+                $enum = $parameters[0] ?? null;
 
-        $validationFactory->extend('enum_key', function ($attribute, $value, $parameters, $validator) {
-            $enum = $parameters[0] ?? null;
+                return (new EnumKey($enum))->passes($attribute, $value);
+            }, trans('laravelEnum::messages.enum_key'));
 
-            return (new EnumKey($enum))->passes($attribute, $value);
-        }, trans('laravelEnum::messages.enum_key'));
+            $validationFactory->extend('enum_value', function (string $attribute, $value, array $parameters, $validator): bool {
+                $enum = $parameters[0] ?? null;
+                $strict = $parameters[1] ?? null;
 
-        $validationFactory->extend('enum_value', function ($attribute, $value, $parameters, $validator) {
-            $enum = $parameters[0] ?? null;
+                if (! $strict) {
+                    return (new EnumValue($enum))->passes($attribute, $value);
+                }
+                $strict = (bool) json_decode(strtolower($strict));
 
-            $strict = $parameters[1] ?? null;
+                return (new EnumValue($enum, $strict))->passes($attribute, $value);
+            }, trans('laravelEnum::messages.enum_value'));
 
-            if (! $strict) {
-                return (new EnumValue($enum))->passes($attribute, $value);
-            }
+            $validationFactory->extend('enum', function (string $attribute, $value, array $parameters, $validator): bool {
+                $enum = $parameters[0] ?? null;
 
-            $strict = !! json_decode(strtolower($strict));
+                return (new Enum($enum))->passes($attribute, $value);
+            }, trans('laravelEnum::messages.enum'));
 
-            return (new EnumValue($enum, $strict))->passes($attribute, $value);
-        }, trans('laravelEnum::messages.enum_value'));
-
-        $validationFactory->extend('enum', function ($attribute, $value, $parameters, $validator) {
-            $enum = $parameters[0] ?? null;
-
-            return (new Enum($enum))->passes($attribute, $value);
-        }, trans('laravelEnum::messages.enum'));
+            return $validationFactory;
+        });
     }
 
     protected function bootDoctrineType(): void

@@ -2,12 +2,12 @@
 
 namespace BenSampo\Enum\Tests;
 
-use Orchestra\Testbench\TestCase;
 use BenSampo\Enum\EnumServiceProvider;
+use Orchestra\Testbench\TestCase;
 
 class ApplicationTestCase extends TestCase
 {
-    public function setUp(): void
+    protected function setUp(): void
     {
         parent::setUp();
 

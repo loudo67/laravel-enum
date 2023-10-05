@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace BenSampo\Enum\Tests\Enums;
+namespace BenSampo\Enum\Tests\Enums\Annotate;
 
 use BenSampo\Enum\Enum;
 
@@ -19,7 +19,7 @@ use BenSampo\Enum\Enum;
  */
 final class EnumWithMultipleLineComments extends Enum
 {
-    const A = 1;
-    const B = 2;
-    const C = 3;
+    public const A = 1;
+    public const B = 2;
+    public const C = 3;
 }

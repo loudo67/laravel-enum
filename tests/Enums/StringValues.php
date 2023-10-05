@@ -5,10 +5,13 @@ namespace BenSampo\Enum\Tests\Enums;
 use BenSampo\Enum\Enum;
 
 /**
+ * @method static static Administrator()
+ * @method static static Moderator()
+ *
  * @extends Enum<self::*>
  */
 final class StringValues extends Enum
 {
-    const Administrator = 'administrator';
-    const Moderator = 'moderator';
+    public const Administrator = 'administrator';
+    public const Moderator = 'moderator';
 }

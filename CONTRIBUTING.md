@@ -10,7 +10,7 @@ Hey, thank you for contributing. Here are some tips to make it easy for you.
 1. Think about how the changes you are about to make can be tested, write tests before coding 
 1. Run tests, make sure they fail
 1. Write the actual code to make the tests pass
-1. Run checks with `composer all`
+1. Run checks with `make`
 1. Open a pull request detailing your changes. Make sure to follow the [template](.github/PULL_REQUEST_TEMPLATE.md)
 
 ## Testing
@@ -25,28 +25,28 @@ back is to write a failing test for it and then make it pass. If you can
 not figure out how to fix it yourself, feel free to submit a PR with a
 failing test.
 
-Run the testsuite
+Run the testsuite:
 
-```bash
-composer test
+```sh
+make test
 ```
 
 ## Codestyle
 
-Formatting is automated through [php_codesniffer](https://github.com/squizlabs/PHP_CodeSniffer).
+Formatting is automated through [php-cs-fixer](https://github.com/friendsofphp/php-cs-fixer).
 
-Apply automated fixes
+Apply automated fixes:
 
-```bash
-composer fix
+```sh
+make fix
 ```
 
 ## Static Analysis
 
 We use [PHPStan](https://phpstan.org) for static analysis.
 
-Run static analysis
+Run static analysis:
 
-```bash
-composer stan
+```sh
+make stan
 ```
